@@ -150,7 +150,7 @@ RV_COMPLIANCE_CODE_BEGIN
 
     sw      x6, 3(x2)
 
-    RVTEST_IO_ASSERT_GPR_EQ(x2, 0x800035D4)
+    RVTEST_IO_ASSERT_GPR_EQ(x2, 0x00002074)
 
     RVTEST_IO_WRITE_STR("# Test part A3  - Complete\n");
 
