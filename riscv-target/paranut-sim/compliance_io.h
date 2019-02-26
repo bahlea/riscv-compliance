@@ -41,20 +41,48 @@
 #ifdef RVTEST_IO_QUIET
 
 #define RVTEST_IO_INIT
-#define RVTEST_IO_WRITE_STR(_STR)
+#define RVTEST_IO_WRITE_STR(_SP, _STR)
 #define RVTEST_IO_CHECK()
-#define RVTEST_IO_ASSERT_GPR_EQ(_R, _I)
+#define RVTEST_IO_ASSERT_GPR_EQ(_SP, _R, _I)
 #define RVTEST_IO_ASSERT_SFPR_EQ(_F, _R, _I)
 #define RVTEST_IO_ASSERT_DFPR_EQ(_D, _R, _I)
 
 #else
 
+#define RSIZE 4
+// _SP = (volatile register)
+#define LOCAL_IO_PUSH(_SP)                                              \
+    la      _SP,  begin_regstate;                                       \
+    sw      x1,   (1*RSIZE)(_SP);                                       \
+    sw      x5,   (5*RSIZE)(_SP);                                       \
+    sw      x6,   (6*RSIZE)(_SP);                                       \
+    sw      x8,   (8*RSIZE)(_SP);                                       \
+    sw      x10,  (10*RSIZE)(_SP);
+
+// _SP = (volatile register)
+#define LOCAL_IO_POP(_SP)                                               \
+    la      _SP,   begin_regstate;                                      \
+    lw      x1,   (1*RSIZE)(_SP);                                       \
+    lw      x5,   (5*RSIZE)(_SP);                                       \
+    lw      x6,   (6*RSIZE)(_SP);                                       \
+    lw      x8,   (8*RSIZE)(_SP);                                       \
+    lw      x10,  (10*RSIZE)(_SP);
+
 #define LOCAL_IO_WRITE_GPR(_R)                                          \
     mv          a0, _R;                                                 \
     jal         FN_WriteA0;
 
+#define LOCAL_IO_WRITE_FPR(_F)                                          \
+    fmv.x.s     a0, _F;                                                 \
+    jal         FN_WriteA0;
 
-#define LOCAL_IO_PUTC(_R)                                               \
+#define LOCAL_IO_WRITE_DFPR(_V1, _V2)                                   \
+    mv          a0, _V1;                                                \
+    jal         FN_WriteA0; \
+    mv          a0, _V2; \
+    jal         FN_WriteA0; \
+
+#define LOCAL_IO_PUTC(_R) 												\
 	mv			t2, _R;												    \
     li 			t3, 0x90000000;                                         \
 	sb			t2, 0(t3);	
@@ -64,16 +92,20 @@
 // Assertion violation: file file.c, line 1234: (expr)
 // _R = GPR
 // _I = Immediate
-#define RVTEST_IO_ASSERT_GPR_EQ(_R, _I)                                 \
+#define RVTEST_IO_ASSERT_GPR_EQ(_SP, _R, _I)                            \
 
 
-#define RVTEST_IO_WRITE_STR(_STR)                                       \
+// _SP = (volatile register)
+#define LOCAL_IO_WRITE_STR(_STR) RVTEST_IO_WRITE_STR(x31, _STR)
+#define RVTEST_IO_WRITE_STR(_SP, _STR)                                  \
+    LOCAL_IO_PUSH(_SP)                                                  \
     .section .data.string;                                              \
 20001:                                                                  \
     .string _STR;                                                       \
     .section .text.init;                                                \
     la a0, 20001b;                                                      \
-    jal FN_WriteStr;
+    jal FN_WriteStr;                                                    \
+    LOCAL_IO_POP(_SP)
 
 // generate assertion listing
 #define RVTEST_IO_CHECK()                                               \
