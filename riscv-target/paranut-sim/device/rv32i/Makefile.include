@@ -5,7 +5,7 @@ endif
 
 RUN_TARGET=\
     $(TARGET_SIM) \
-        -t0 -c -i -s $(work_dir_isa)/$< 2>$(work_dir_isa)/$<-tb_out\
+        -t0 -c -i2 -s $(work_dir_isa)/$< 2>$(work_dir_isa)/$<-tb_out\
         
 RISCV_PREFIX   ?= riscv32-unknown-elf-
 RISCV_GCC      ?= $(RISCV_PREFIX)gcc

@@ -84,7 +84,7 @@
 
 #define LOCAL_IO_PUTC(_R) 												\
 	mv			t2, _R;												    \
-    li 			t3, 0x90000000;                                         \
+    la 			t3, tohost;                                         \
 	sb			t2, 0(t3);	
 
 #define RVTEST_IO_INIT
